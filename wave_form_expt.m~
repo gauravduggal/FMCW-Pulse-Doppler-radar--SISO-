@@ -1,0 +1,68 @@
+close all
+clear all
+clc
+fs = 10e6;
+ts = 1/fs;
+tp = 1e-4;
+tw = 1e-5;
+PRI = tp+tw;
+N = 100;
+CPI = 100*PRI;
+Td = 1/CPI;
+tpri = -PRI/2:ts:PRI/2-ts;
+wc = 2*pi*10e9;
+B = 5e6;
+k = B/tp;
+%% for 1 PRI
+figure;
+x = exp(1j*wc*tpri).*exp(1j*k*tpri.^2);
+f = -fs/2:1/PRI:fs/2-1/PRI;
+plot(f,abs(fftshift(fft(x))));
+
+%% for CPI
+figure;
+t = 0:ts:CPI-ts;
+L = length(tpri);
+tx = zeros(size(t));
+for n = 1:length(t)
+    l = floor(n/L);
+    tx(n) = exp(1j*wc*t(n))*exp(1j*k*(t(n)-(l*PRI)).^2);
+end
+f = -fs/2:1/CPI:fs/2-1/CPI;
+plot(f,abs(fftshift(fft(tx))));
+
+%% rx for target for 1 PRI
+figure;
+td = 0.5e-6;
+td = td*ones(size(tpri));
+rx = exp(1j*wc*tpri).*exp(1j*k*(tpri-td).^2);
+f = -fs/2:1/PRI:fs/2-1/PRI;
+plot(f,abs(fftshift(fft(rx))));
+
+%% dechirp for 1 PRI
+figure;
+y = conj(x).*rx;
+plot(f,abs(fftshift(fft(y))));
+
+%% rx for target for CPI
+figure;
+t = 0:ts:CPI-ts;
+L = length(tpri);
+rx = zeros(size(t));
+for n = 1:length(t)
+    l = floor(n/L);
+    rx(n) = exp(1j*wc*t(n))*exp(1j*k*(t(n)-(l*PRI)).^2);
+end
+f = -fs/2:1/CPI:fs/2-1/CPI;
+plot(f,abs(fftshift(fft(tx))));
+
+
+
+window = ones(size(tpri));
+window((tpri > tp-PRI/2)) = 0;
+plot(window)
+window = repmat(window, [1,N]);
+plot(window)
+
+
+
